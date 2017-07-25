@@ -32,6 +32,7 @@ def getGalaxy(whichGalaxy, fields, # index of a galaxy and the 2d list of fields
         simulation='Illustris-1', snapshot=135, # which simulation and snapshot
         fileName='temp',rewriteFile=1): # name of the file where .hdf5 data is stored and whether to rewrite or just read
     
+    
     fields=np.array(fields) # converts to array
     order=np.argsort(fields[:,0])
     disorder=np.argsort(order) # needed to unsort the fields later...
