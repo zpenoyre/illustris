@@ -105,6 +105,7 @@ def getHaloField(field,simulation='Illustris-1',snapshot=135,fileName='temp',rew
         data=np.array(f['Group'][field])
     return data
 
+#old and probably broken
 def getSim(simName):
     r = get(baseUrl)
     names = [sim['name'] for sim in r['simulations']]
