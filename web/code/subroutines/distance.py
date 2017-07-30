@@ -76,7 +76,8 @@ def align_function(ang_mom_mat, distance_mat, fil_pos_mat):
         
         align_mat[i,2] = np.dot(fil_vec, gal_ang_mom)/(fil_vec_size * gal_ang_mom_size)
         align_mat[i,3] = np.linalg.norm( np.cross(fil_vec, gal_ang_mom) )/(fil_vec_size * gal_ang_mom_size)
-        align_mat[i,4] = np.angle( align_mat[i,2] + align_mat[i,3]*1.j)
+        align_mat[i,4] = np.arccos( np.clip( np.dot( abs(fil_vec)/fil_vec_size, abs(gal_ang_mom)/gal_ang_mom_size),-1.0,1.0))
+
         
         if (i%steps == 0):
             print ("align_function done with", (i/steps) *25,"%")
