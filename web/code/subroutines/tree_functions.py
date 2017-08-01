@@ -41,3 +41,24 @@ def find_galaxy(data, start_no, end_no, start_index):
                     index = -1
                     
     return index
+
+# input :0-3 for z begin and end, z=0:0
+# output: column 0: location in web at start, column 1: location in web at end 2: index of subfind at z_end 3: index of subfind at z_start
+def web_evolution(data, webdata, z_begin, z_end):
+        
+    number_map = [0,19,32,50]; start_no = number_map[z_begin]; end_no =  number_map[z_end]  
+    a_size= data[start_no][:,0].shape[0];
+    output = np.zeros((a_size,4));
+    
+    for i in range(0, a_size):
+        index = find_galaxy(data, start_no, end_no, i);
+        output[i, 0] = webdata[z_begin][i,17];
+        if index != -1:
+            output[i, 1] = webdata[z_end][index,17];
+            output[i, 2] = index
+            output[i, 3] = i
+        else:
+            output[i, 1] = np.NAN
+            output[i, 2] = np.NAN
+    return output
+
