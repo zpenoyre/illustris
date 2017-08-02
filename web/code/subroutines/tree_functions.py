@@ -25,20 +25,25 @@ def find_galaxy(data, start_no, end_no, start_index):
             # check if next subhalo available
             if next_sub != -1:
                 # select index of next subhalo
-                index = np.argwhere( data[i-1][:,1] == next_sub )[0][0];
-            else:
-                # check wether successor subhalo exists at z=0, if so walk from z=0 backward in time
-                if data[i][index,21] != -1:
-                    for j in range (0,end_no):
-                        prev_sub = data[j][index,23]
-                        # check if previous subhalo available
-                        if prev_sub != -1:
-                            # select index of previous subhalo
-                            index = np.argwhere( data[i+1][:,1] == prev_sub )[0][0];
-                        else:
-                            index = -1
+                index = np.argwhere( data[i-1][:,1] == next_sub )
+                if index.size != 0:
+                    index = index[0][0];
                 else:
                     index = -1
+            else:
+                index = -1
+                # # check wether successor subhalo exists at z=0, if so walk from z=0 backward in time
+                # if data[i][index,21] != -1:
+                #     for j in range (0,end_no):
+                #         prev_sub = data[j][index,23]
+                #         # check if previous subhalo available
+                #         if prev_sub != -1:
+                #             # select index of previous subhalo
+                #             index = np.argwhere( data[i+1][:,1] == prev_sub )[0][0];
+                #         else:
+                #             index = -1
+                # else:
+                #     index = -1
                     
     return index
 

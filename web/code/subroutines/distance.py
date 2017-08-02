@@ -1,6 +1,7 @@
 # Import libaries and illustris library
 import numpy as np
 import math
+#from numba import jit
 
 # calulate distance to a point:
 
@@ -8,7 +9,7 @@ import math
 #        fil_pos_mat: position of filaments in column matrix x,y,z position
 
 # output: array: 1st column is index of filament row that is nearest to particle. 2nd column is absolute distance
-
+#@jit
 def distance_function(subhalo_mask, fil_pos_mat):
     
     #initialize number of columns in input file and number of steps to print
@@ -48,7 +49,7 @@ def distance_function(subhalo_mask, fil_pos_mat):
 #                                              3rd is cos(theta)
 #                                              4th is sin(theta)
 #                                              5th is angle
-
+#@jit
 def align_function(ang_mom_mat, distance_mat, fil_pos_mat):
     
     #initialize number of columns in input file and number of steps to print
