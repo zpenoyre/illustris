@@ -4,7 +4,7 @@ import numpy as np
 # output: linspace, the fraction and the error term
 def bin_frac(data, data_bin, bins, fraction_value):
     
-    output= np.zeros((len(bins)-1, 3))
+    output= np.zeros((len(bins)-1, 4))
 
     for i in range (0, len(bins)-1):
 
@@ -20,6 +20,7 @@ def bin_frac(data, data_bin, bins, fraction_value):
         output[i,0] = np.mean(bins[i:i+2])
         output[i,1] = fraction
         output[i,2] = error
+        output[i,3] = (mask[:] == fraction_value).sum()
 
     return output
 
@@ -64,7 +65,7 @@ def mass_function(data_input, bins):
         
     return binned_mat
 
-# Logarithmic base 10 Binning
+#  Binning
 # input: data matrix 1 and 2, bins is the bin list, if bmedian =1 median 
 # output: 0-1: binned data from index, 2-3: error from indicies, 
 #         4: count of data points in bin devided by step size, 5: count of data points in bin
@@ -97,8 +98,3 @@ def bin_data(bin_data_1, bin_data_2, bins, bmedian = 0):
             binned_mat[i,5] = data_mask_2.size
         
     return binned_mat
-
-# linear Binning
-# input: data matrix, index1-2: indices of data to be binned (binned w/ respect to index 1), no of bins, if bmedian =1 median 
-# output: 0-1: binned data from index, 2-3: error from indicies, 
-#         4: count of data points in bin devided by step size, 5: count of data points in bin
