@@ -1,6 +1,6 @@
 import numpy as np
 
-# input: data matrix (1 column, data for x axis (binned with respect to), list of bins, the value for mask to be binned (in this case 0 1 or -1 for cluster/fil), the max for the linspace
+# input: data matrix (1 column), data for x axis (binned with respect to), list of bins, the value for mask to be binned (in this case 0 1 or -1 for cluster/fil), the max for the linspace
 # output: linspace, the fraction and the error term
 def bin_frac(data, data_bin, bins, fraction_value):
     
