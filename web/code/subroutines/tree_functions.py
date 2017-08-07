@@ -120,6 +120,32 @@ def find_galaxy(data, start_no, end_no, start_index):
                     
     return index
 
+
+def find_all_data_evolution(data, webdata, start_no, end_no, start_index):
+    number_map = [0,19,32,50];
+    output = np.zeros((end_no-start_no+1,25))
+    output[0,0:21] = data[start_no][start_index,0:21]
+    output[0,21] = webdata[0][start_index,17]
+
+    index = start_index
+    for i in range(start_no, end_no):
+        index  = find_galaxy_backward(data, i, i+1, index);
+        if index == -1:
+            output[i+1,:] = np.NAN
+            continue
+        else: 
+            output[i+1,0:21] = data[i+1][index,0:21]
+            
+            if i+1 == 19:
+                output[0,22] = webdata[1][index,17]
+            if i+1 == 32:
+                output[0,23] = webdata[2][index,17]
+            if i+1 == 50:
+                output[0,24] = webdata[3][index,17]
+
+    return output
+
+
 # input: start AND end number (we have z=0 == 0 and then go up as we go up in redshift), AND index of subfind
 # output: index of subfind at end number
 def find_galaxy_backward(data, start_no, end_no, start_index):
