@@ -3,11 +3,17 @@ import numpy as np
 import h5py
 
 baseUrl = 'http://www.illustris-project.org/api/'
-headers = {"api-key":"cc4ff6392e79c9e08c158e5ae5493718"}
+with open('./ApiKey.txt') as f:
+    key = f.readlines()[0]
+#key=np.genfromtxt('./ApiKey.txt')
+headers = {"api-key":key}
     
 # Routine to pull data from online
 def get(path, params=None, fName='temp'): # gets data from url, saves to file
     # make HTTP GET request to path
+    if (len(key)!=32):
+        print('Have you put your API key in ApiKey.txt?')
+        print('Currently it is: ',key)
     r = requests.get(path, params=params, headers=headers)
     
     # raise exception if response code is not HTTP SUCCESS (200)
@@ -30,7 +36,8 @@ def get(path, params=None, fName='temp'): # gets data from url, saves to file
 particleTypeNames=['gas','dm','error','tracers','stars','bhs'] 
 def getGalaxy(whichGalaxy, fields, # index of a galaxy and the 2d list of fields (particle type and name of fields)
         simulation='Illustris-1', snapshot=135, # which simulation and snapshot
-        fileName='temp',rewriteFile=1): # name of the file where .hdf5 data is stored and whether to rewrite or just read
+        fileName='tempGal',rewriteFile=1, # name of the file where .hdf5 data is stored and whether to rewrite or just read
+        getHalo=0): # can also pull out all data from halo (rather than subhalo) BIG!
     
     
     fields=np.array(fields) # converts to array
@@ -41,7 +48,9 @@ def getGalaxy(whichGalaxy, fields, # index of a galaxy and the 2d list of fields
     
     if rewriteFile==1: # redownloads file from the internet
         url='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/subhalos/'+str(whichGalaxy)+'/cutout.hdf5?'
-    
+        if getHalo==1:
+            url='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/halos/'+str(whichGalaxy)+'/cutout.hdf5?'
+        
         thisParticle=0
         thisEntry=0
         firstParticle=1
@@ -83,7 +92,8 @@ def getGalaxy(whichGalaxy, fields, # index of a galaxy and the 2d list of fields
             # returns all particle data of each field as a numpy array
     return data # returns all the particle fields as a list of numpy arrays in the same order as initial fields
 
-def getSubhaloField(field,simulation='Illustris-1',snapshot=135,fileName='temp',rewriteFile=1):
+# data from one field for all subhalos in a given snapshot  
+def getSubhaloField(field,simulation='Illustris-1',snapshot=135,fileName='tempCat',rewriteFile=1):
     if rewriteFile==1: # redownloads file from the internet
         url='http://www.illustris-project.org/api/'+simulation+'/files/groupcat-'+str(snapshot)+'/?Subhalo='+field
         dataFile=get(url,fName=fileName)
@@ -94,7 +104,8 @@ def getSubhaloField(field,simulation='Illustris-1',snapshot=135,fileName='temp',
         data=np.array(f['Subhalo'][field])
     return data
     
-def getHaloField(field,simulation='Illustris-1',snapshot=135,fileName='temp',rewriteFile=1):
+# data from one field for all halos in a given snapshot    
+def getHaloField(field,simulation='Illustris-1',snapshot=135,fileName='tempCat',rewriteFile=1):
     if rewriteFile==1: # redownloads file from the internet
         url='http://www.illustris-project.org/api/'+simulation+'/files/groupcat-'+str(snapshot)+'/?Group='+field
         dataFile=get(url,fName=fileName)
@@ -104,21 +115,66 @@ def getHaloField(field,simulation='Illustris-1',snapshot=135,fileName='temp',rew
     with h5py.File(dataFile,'r') as f:
         data=np.array(f['Group'][field])
     return data
+    
+#returns a dictionary with all halo catalog data corresponding to a particular halo
+def getHaloData(whichHalo, simulation='Illustris-1', snapshot=135):
+    url='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/halos/'+str(whichHalo)+'/info.json'
+    data=get(url)
+    haloData=data['Group']
+    return haloData
+    
+#returns a dictionary with all subhalo catalog data corresponding to a particular subhalo, plus progenitors!
+def getSubhaloData(whichSubhalo, simulation='Illustris-1', snapshot=135, addTree=1):
+    infoUrl='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/subhalos/'+str(whichSubhalo)+'/info.json'
+    infoData=get(infoUrl)
+    subhaloData=infoData['Subhalo']
 
-#old and probably broken
-def getSim(simName):
-    r = get(baseUrl)
-    names = [sim['name'] for sim in r['simulations']]
-    i = names.index(simName)
-    sim = get( r['simulations'][i]['url'] )
-    return sim
+    #tree goes all the way back in time, but only one snapshot forwards (and no merger info)
+    if addTree==1:
+        subUrl='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/subhalos/'+str(whichSubhalo)
+        subData=get(subUrl)
+        treeUrl='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/subhalos/'+str(whichSubhalo)+'/sublink/mpb.hdf5'
+        treeData=get(treeUrl,fName='tempTree')
+        with h5py.File(treeData,'r') as f:
+            treeSubs=f['SubfindID'][:]
+            treeSnaps=f['SnapNum'][:]
+        if (subData['desc_snap'] != -1):
+            treeSnaps=np.insert(treeSnaps,0,subData['desc_snap'])
+            treeSubs=np.insert(treeSubs,0,subData['desc_sfid'])
+        subhaloData['MergerSnapshot']=treeSnaps
+        subhaloData['MergerSubhalos']=treeSubs
     
-def getSnap(sim,whichSnap):
-    snaps = get( sim['snapshots'] )
-    snap = get( snaps[whichSnap]['url'] )
-    return snap
+    return subhaloData
     
-def getSub(subs,whichSub):
-    sub_url=subs['results'][whichSub]['url']
-    sub=get(sub_url)
-    return sub
+#returns relevant details for a particular snapshot
+def getSnapData(snapshot=135,simulation='Illustris-1'):
+    snapUrl='http://www.illustris-project.org/api/'+simulation+'/snapshots/'+str(snapshot)+'/'
+    snapData=get(snapUrl)
+    data={'Simulation':simulation}
+    data['SnapshotNumber']=snapshot
+    #could add time
+    data['Redshift']=snapData['redshift']
+    data['NumPartGas']=snapData['num_gas']
+    data['NumPartDM']=snapData['num_dm']
+    data['NumPartTracer']=snapData['num_trmc']
+    data['NumPartStar']=snapData['num_stars']
+    data['NumPartBH']=snapData['num_bhs']
+    data['NumHalos']=snapData['num_groups_fof']
+    data['NumSubhalos']=snapData['num_groups_subfind']
+    return data
+    
+#returns relevant details for a particular simulation
+def getSimData(simulation='Illustris-1'):
+    simUrl='http://www.illustris-project.org/api/'+simulation+'/'
+    simData=get(simUrl)
+    #could add table of snapshots, redshifts and times
+    data={'Simulation':simulation}
+    data['BoxSize']=simData['boxsize']
+    data['h']=simData['hubble']
+    data['Omega_0']=simData['omega_0']
+    data['Omega_L']=simData['omega_L']
+    data['Omega_B']=simData['omega_B']
+    data['MassDM']=simData['mass_dm']
+    data['MassGas']=simData['mass_gas']
+    return data
+
