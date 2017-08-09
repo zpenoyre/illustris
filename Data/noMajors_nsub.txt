@@ -1,4 +1,4 @@
-# Index of massive ellpiticals with no major mergers and minor mergers over lifetime <0.1 of mass
+# Subhalo Number and index of massive ellpiticals with no major mergers and minor mergers over lifetime <0.1 of mass
 21.000000 21.000000
 16956.000000 94.000000
 41088.000000 172.000000
